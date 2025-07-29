@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Growth Loops - Controle de Otimizações</title>
+    
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #0066cc;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #17a2b8;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container-fluid {
+            background: rgba(255, 255, 255, 0.95);
+            min-height: 100vh;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #4a90e2 100%) !important;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        /* Card Enhancements */
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Dashboard Cards */
+        .dashboard-card {
+            background: linear-gradient(135deg, var(--primary), #4a90e2);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px) scale(1.02);
+        }
+
+        .dashboard-card.bg-success {
+            background: linear-gradient(135deg, var(--success), #20c997) !important;
+        }
+
+        .dashboard-card.bg-warning {
+            background: linear-gradient(135deg, var(--warning), #ffca2c) !important;
+        }
+
+        .dashboard-card.bg-info {
+            background: linear-gradient(135deg, var(--info), #20c997) !important;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            font-size: 0.8em;
+            padding: 0.5em 1em;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .status-VALIDADO { 
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            animation: pulse-success 2s infinite;
+        }
+        
+        .status-TESTANDO { 
+            background: linear-gradient(135deg, #ffc107, #ffca2c);
+            color: #212529;
+            animation: pulse-warning 2s infinite;
+        }
+        
+        .status-PLANEJADO { 
+            background: linear-gradient(135deg, #6c757d, #adb5bd);
+            color: white;
+        }
+
+        @keyframes pulse-success {
+            0%, 100% { box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3); }
+            50% { box-shadow: 0 4px 8px rgba(40, 167, 69, 0.5); }
+        }
+
+        @keyframes pulse-warning {
+            0%, 100% { box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3); }
+            50% { box-shadow: 0 4px 8px rgba(255, 193, 7, 0.5); }
+        }
+
+        /* Button Enhancements */
+        .btn {
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .btn-action {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+            margin: 0 0.2rem;
+            border-radius: 6px;
+        }
+        
+        .quick-actions {
+            white-space: nowrap;
+            display: flex;
+            gap: 0.3rem;
+            justify-content: center;
+        }
+
+        /* Table Enhancements */
+        .table {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, #343a40, #495057);
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+        }
+
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(0, 102, 204, 0.05);
+            transform: scale(1.01);
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* Form Enhancements */
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.7rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+            background: white;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Modal Enhancements */
+        .modal-content {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary), #4a90e2);
+            color: white;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            padding: 1.5rem;
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+
+        /* Input Group Enhancements */
+        .input-group-text {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--primary);
+            border-radius: 8px 0 0 8px;
+        }
+
+        .input-group .form-control {
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        /* Badge Enhancements */
+        .badge {
+            padding: 0.5em 1em;
+            border-radius: 20px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Utility Classes */
+        .fw-600 { font-weight: 600; }
+
+        .text-gradient {
+            background: linear-gradient(135deg, var(--primary), #4a90e2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Animation Classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Toast Enhancements */
+        .toast {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(10px);
+        }
+
+        .toast-header {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        /* Dropdown Enhancements */
+        .dropdown-menu {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .dropdown-item {
+            padding: 0.7rem 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(0, 102, 204, 0.1);
+            color: var(--primary);
+        }
+
+        /* Responsive Enhancements */
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding: 0;
+            }
+            
+            header {
+                border-radius: 0;
+                margin-bottom: 1rem;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+                border-radius: 0;
+            }
+            
+            .table-responsive {
+                font-size: 0.85rem;
+                border-radius: 0;
+            }
+            
+            .btn-action {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.8rem;
+            }
+            
+            .quick-actions {
+                flex-direction: column;
+                gap: 0.2rem;
+            }
+            
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+            
+            .modal-body {
+                padding: 1rem;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --light: #212529;
+                --dark: #f8f9fa;
+            }
+        }
+
+        /* Performance optimizations */
+        * {
+            box-sizing: border-box;
+        }
+
+        .card, .btn, .form-control, .modal-content {
+            will-change: transform;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container-fluid">
+        <!-- Header -->
+        <header class="row bg-primary text-white py-3 mb-4">
+            <div class="col">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    Growth Loops
+                </h1>
+                <small>Controle de Otimizações - Beta v1.0</small>
+            </div>
+            <div class="col-auto d-flex align-items-center">
+                <div class="dropdown me-3">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" 
+                            data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span id="currentUser">Admin</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><h6 class="dropdown-header">
+                            <i class="bi bi-person me-2"></i>Usuário Beta<br>
+                            <small class="text-muted">admin@growth-loops.com</small>
+                        </h6></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="exportData()">
+                            <i class="bi bi-download me-2"></i>Exportar Dados
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="importData()">
+                            <i class="bi bi-upload me-2"></i>Importar Dados
+                        </a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-light btn-sm" onclick="refreshData()">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    Atualizar
+                </button>
+            </div>
+        </header>
+
+        <!-- Dashboard Cards -->
+        <section id="dashboardSection" class="row mb-4">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card dashboard-card bg-primary text-white fade-in">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="card-title mb-1" id="totalOtimizacoes">0</h2>
+                                <p class="card-text mb-0 opacity-75">Total de Otimizações</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-bar-chart-fill" style="font-size: 3rem; opacity: 0.7;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card dashboard-card bg-success text-white fade-in" style="animation-delay: 0.1s;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="card-title mb-1" id="validadas">0</h2>
+                                <p class="card-text mb-0 opacity-75">Validadas</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-check-circle-fill" style="font-size: 3rem; opacity: 0.7;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card dashboard-card bg-warning text-white fade-in" style="animation-delay: 0.2s;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="card-title mb-1" id="testando">0</h2>
+                                <p class="card-text mb-0 opacity-75">Testando</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-hourglass-split" style="font-size: 3rem; opacity: 0.7;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card dashboard-card bg-info text-white fade-in" style="animation-delay: 0.3s;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="card-title mb-1" id="taxaSucesso">0%</h2>
+                                <p class="card-text mb-0 opacity-75">Taxa de Sucesso</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-trophy-fill" style="font-size: 3rem; opacity: 0.7;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Controls Section -->
+        <section class="row mb-4 slide-up">
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body py-3">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" id="searchInput" class="form-control" 
+                                   placeholder="🔍 Buscar por ID, título, descrição...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card">
+                    <div class="card-body py-3">
+                        <select id="statusFilter" class="form-select">
+                            <option value="">📊 Todos os Status</option>
+                            <option value="PLANEJADO">📅 Planejado</option>
+                            <option value="TESTANDO">⚡ Testando</option>
+                            <option value="VALIDADO">✅ Validado</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card">
+                    <div class="card-body py-3">
+                        <button class="btn btn-primary w-100 fw-600" onclick="openCreateModal()">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Nova Otimização
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Table Section -->
+        <section class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-list-ul"></i>
+                            Lista de Otimizações
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="otimizacoesTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Título</th>
+                                        <th>Pilar</th>
+                                        <th>KPI</th>
+                                        <th>Status</th>
+                                        <th>Meta %</th>
+                                        <th>Real %</th>
+                                        <th>Atingiu</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="otimizacoesTableBody">
+                                    <!-- Dados serão inseridos aqui via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal para Criar/Editar Otimização -->
+    <div class="modal fade" id="otimizacaoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Nova Otimização</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="otimizacaoForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id" class="form-label">ID *</label>
+                                <input type="text" class="form-control" id="id" required 
+                                       placeholder="A001, B002, etc...">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">Status *</label>
+                                <select class="form-select" id="status" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="PLANEJADO">Planejado</option>
+                                    <option value="TESTANDO">Testando</option>
+                                    <option value="VALIDADO">Validado</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="pilar_funil" class="form-label">Pilar do Funil *</label>
+                                <select class="form-select" id="pilar_funil" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Copy">Copy</option>
+                                    <option value="Trafego">Tráfego</option>
+                                    <option value="Preco">Preço</option>
+                                    <option value="Segmentacao">Segmentação</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="tipo_teste" class="form-label">Tipo de Teste *</label>
+                                <input type="text" class="form-control" id="tipo_teste" required 
+                                       placeholder="Ex: A/B, Copy, Campanha...">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="produto_impactado" class="form-label">Produto Impactado *</label>
+                            <select class="form-select" id="produto_impactado" required>
+                                <option value="">Selecione...</option>
+                                <option value="Produto_Principal">Produto Principal</option>
+                                <option value="Order_Bump_1">Order Bump 1</option>
+                                <option value="Order_Bump_2">Order Bump 2</option>
+                                <option value="Upsell_1">Upsell 1</option>
+                                <option value="Upsell_2">Upsell 2</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="titulo_acao" class="form-label">Título da Ação *</label>
+                            <input type="text" class="form-control" id="titulo_acao" required 
+                                   placeholder="Ex: Novo Close, Aumento de Ticket...">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descricao" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="descricao" rows="2" 
+                                      placeholder="Descreva o teste ou otimização..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="kpi_principal" class="form-label">KPI Principal *</label>
+                                <input type="text" class="form-control" id="kpi_principal" required 
+                                       placeholder="Ex: CTR, Conversão, CPA...">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="meta_impacto_pct" class="form-label">Meta de Impacto (%)</label>
+                                <input type="number" step="0.01" class="form-control" id="meta_impacto_pct" 
+                                       placeholder="Ex: 2.5">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="resultado_real_pct" class="form-label">Resultado Real (%)</label>
+                                <input type="number" step="0.01" class="form-control" id="resultado_real_pct" 
+                                       placeholder="Ex: 3.2">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="data_inicio" class="form-label">Data de Início</label>
+                                <input type="date" class="form-control" id="data_inicio">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="data_fim" class="form-label">Data de Fim</label>
+                                <input type="date" class="form-control" id="data_fim">
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="editingId">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveOtimizacao()">
+                        <i class="bi bi-save"></i>
+                        Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir a otimização <strong id="deleteItemName"></strong>?</p>
+                    <p class="text-muted">Esta ação não pode ser desfeita.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="bi bi-trash"></i>
+                        Excluir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast para Notificações -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="notificationToast" class="toast" role="alert">
+            <div class="toast-header">
+                <i class="bi bi-info-circle text-primary me-2"></i>
+                <strong class="me-auto">Growth Loops</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastMessage">
+                <!-- Mensagem será inserida aqui -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Estado da aplicação
+        let currentData = [];
+        let filteredData = [];
+        let deleteItemId = null;
+
+        // Dados de exemplo
+        const sampleData = [
+            {
+                id: 'A001',
+                data_inicio: '2024-07-14',
+                data_fim: '2024-07-22',
+                pilar_funil: 'Copy',
+                produto_impactado: 'Produto_Principal',
+                tipo_teste: 'Copy',
+                titulo_acao: 'Novo Close',
+                descricao: 'Deixar o Fechamento Mais Simples',
+                kpi_principal: 'Conversao',
+                meta_impacto_pct: 2.00,
+                status: 'VALIDADO',
+                resultado_real_pct: 2.92,
+                atingiu: true,
+                created_at: '2024-07-14T10:00:00Z'
+            },
+            {
+                id: 'A002',
+                data_inicio: '2024-07-22',
+                data_fim: null,
+                pilar_funil: 'Copy',
+                produto_impactado: 'Produto_Principal',
+                tipo_teste: 'Preco',
+                titulo_acao: 'Aumento de Ticket',
+                descricao: 'Teste A/B para ver se mantem a conversão com mais margem',
+                kpi_principal: 'Ticket_Medio',
+                meta_impacto_pct: 50.00,
+                status: 'TESTANDO',
+                resultado_real_pct: null,
+                atingiu: false,
+                created_at: '2024-07-22T10:00:00Z'
+            },
+            {
+                id: 'A003',
+                data_inicio: '2024-07-19',
+                data_fim: null,
+                pilar_funil: 'Copy',
+                produto_impactado: 'Produto_Principal',
+                tipo_teste: 'Segmentacao',
+                titulo_acao: 'Diminuir a Perda de Trafego',
+                descricao: 'Rodar apenas para Wi-Fi',
+                kpi_principal: 'Connect Rate',
+                meta_impacto_pct: 90.00,
+                status: 'TESTANDO',
+                resultado_real_pct: 87.00,
+                atingiu: false,
+                created_at: '2024-07-19T10:00:00Z'
+            }
+        ];
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Growth Loops carregando...');
+            loadData();
+            setupEventListeners();
+            console.log('✅ Growth Loops carregado com sucesso!');
+        });
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+            document.getElementById('statusFilter').addEventListener('change', handleFilter);
+        }
+
+        // Carregar dados
+        function loadData() {
+            const saved = localStorage.getItem('growthLoopsData');
+            if (saved) {
+                currentData = JSON.parse(saved);
+            } else {
+                currentData = [...sampleData];
+                saveData();
+            }
+            
+            filteredData = [...currentData];
+            updateUI();
+        }
+
+        // Salvar dados
+        function saveData() {
+            localStorage.setItem('growthLoopsData', JSON.stringify(currentData));
+        }
+
+        // Atualizar interface
+        function updateUI() {
+            updateDashboard();
+            updateTable();
+        }
+
+        // Atualizar dashboard
+        function updateDashboard() {
+            const total = currentData.length;
+            const validadas = currentData.filter(item => item.status === 'VALIDADO').length;
+            const testando = currentData.filter(item => item.status === 'TESTANDO').length;
+            const sucessos = currentData.filter(item => item.atingiu === true).length;
+            const taxaSucesso = total > 0 ? Math.round((sucessos / total) * 100) : 0;
+
+            document.getElementById('totalOtimizacoes').textContent = total;
+            document.getElementById('validadas').textContent = validadas;
+            document.getElementById('testando').textContent = testando;
+            document.getElementById('taxaSucesso').textContent = taxaSucesso + '%';
+        }
+
+        // Atualizar tabela
+        function updateTable() {
+            const tbody = document.getElementById('otimizacoesTableBody');
+            
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            Nenhuma otimização encontrada
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = filteredData.map(item => createTableRow(item)).join('');
+        }
+
+        // Criar linha da tabela
+        function createTableRow(item) {
+            const statusClass = `status-${item.status}`;
+            const atingiuBadge = getAtingiuBadge(item.atingiu, item.status);
+            
+            return `
+                <tr class="slide-up">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-weight: bold;">
+                                    ${item.id.charAt(0)}
+                                </div>
+                            </div>
+                            <div>
+                                <strong class="text-primary">${item.id}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar3 me-1"></i>${formatDate(item.data_inicio)}
+                                </small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="fw-600 text-dark mb-1">${truncate(item.titulo_acao, 35)}</div>
+                        <small class="text-muted">
+                            <i class="bi bi-file-text me-1"></i>${truncate(item.descricao || 'Sem descrição', 45)}
+                        </small>
+                    </td>
+                    <td>
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 mb-2 d-block">${item.pilar_funil}</span>
+                        <small class="text-muted">
+                            <i class="bi bi-box me-1"></i>${item.produto_impactado.replace('_', ' ')}
+                        </small>
+                    </td>
+                    <td>
+                        <div class="fw-600 text-dark">
+                            <i class="bi bi-graph-up me-1 text-info"></i>${item.kpi_principal}
+                        </div>
+                        <small class="text-muted">${item.tipo_teste}</small>
+                    </td>
+                    <td>
+                        <span class="status-badge ${statusClass}">${item.status}</span>
+                    </td>
+                    <td class="text-center">
+                        <div class="fw-600 text-primary">${formatPercentage(item.meta_impacto_pct)}</div>
+                    </td>
+                    <td class="text-center">
+                        <div class="fw-600 ${item.resultado_real_pct ? 'text-success' : 'text-muted'}">
+                            ${formatPercentage(item.resultado_real_pct)}
+                        </div>
+                        ${getComparisonIcon(item.resultado_real_pct, item.meta_impacto_pct)}
+                    </td>
+                    <td class="text-center">
+                        ${atingiuBadge}
+                    </td>
+                    <td>
+                        <div class="quick-actions">
+                            <button class="btn btn-outline-primary btn-action" 
+                                    onclick="editOtimizacao('${item.id}')" 
+                                    title="Editar">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn btn-outline-info btn-action" 
+                                    onclick="viewDetails('${item.id}')" 
+                                    title="Ver detalhes">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-action" 
+                                    onclick="deleteOtimizacao('${item.id}', '${item.titulo_acao}')" 
+                                    title="Excluir">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Busca e filtros
+        function handleSearch(event) {
+            const searchTerm = event.target.value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            applyFilters(searchTerm, statusFilter);
+        }
+
+        function handleFilter(event) {
+            const statusFilter = event.target.value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            applyFilters(searchTerm, statusFilter);
+        }
+
+        function applyFilters(searchTerm, statusFilter) {
+            let filtered = [...currentData];
+            
+            if (searchTerm) {
+                filtered = filtered.filter(item => 
+                    item.id.toLowerCase().includes(searchTerm) ||
+                    item.titulo_acao.toLowerCase().includes(searchTerm) ||
+                    (item.descricao || '').toLowerCase().includes(searchTerm) ||
+                    item.kpi_principal.toLowerCase().includes(searchTerm) ||
+                    item.pilar_funil.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (statusFilter) {
+                filtered = filtered.filter(item => item.status === statusFilter);
+            }
+            
+            filteredData = filtered;
+            updateTable();
+        }
+
+        // CRUD Operations
+        function openCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Nova Otimização';
+            document.getElementById('editingId').value = '';
+            clearForm();
+            
+            const modal = new bootstrap.Modal(document.getElementById('otimizacaoModal'));
+            modal.show();
+        }
+
+        function editOtimizacao(id) {
+            const item = currentData.find(o => o.id === id);
+            if (!item) {
+                showNotification('Otimização não encontrada', 'error');
+                return;
+            }
+            
+            document.getElementById('modalTitle').textContent = `Editar Otimização ${id}`;
+            document.getElementById('editingId').value = id;
+            
+            fillForm(item);
+            
+            const modal = new bootstrap.Modal(document.getElementById('otimizacaoModal'));
+            modal.show();
+        }
+
+        function saveOtimizacao() {
+            const formData = getFormData();
+            const errors = validateForm(formData);
+            
+            if (errors.length > 0) {
+                showNotification('Erro: ' + errors.join(', '), 'error');
+                return;
+            }
+            
+            const editingId = document.getElementById('editingId').value;
+            const isEditing = !!editingId;
+            
+            if (isEditing) {
+                const index = currentData.findIndex(item => item.id === editingId);
+                if (index !== -1) {
+                    currentData[index] = { ...currentData[index], ...formData };
+                }
+            } else {
+                // Verificar se ID já existe
+                if (currentData.find(item => item.id === formData.id)) {
+                    showNotification('ID já existe! Use outro ID.', 'error');
+                    return;
+                }
+                
+                formData.created_at = new Date().toISOString();
+                currentData.push(formData);
+            }
+            
+            saveData();
+            loadData();
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('otimizacaoModal'));
+            modal.hide();
+            
+            showNotification(
+                isEditing ? 
+                `Otimização ${editingId} atualizada com sucesso!` : 
+                `Otimização ${formData.id} criada com sucesso!`, 
+                'success'
+            );
+        }
+
+        function deleteOtimizacao(id, titulo) {
+            deleteItemId = id;
+            document.getElementById('deleteItemName').textContent = `${id} - ${titulo}`;
+            
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        }
+
+        function confirmDelete() {
+            if (!deleteItemId) return;
+            
+            const index = currentData.findIndex(item => item.id === deleteItemId);
+            if (index !== -1) {
+                currentData.splice(index, 1);
+                saveData();
+                loadData();
+                
+                showNotification(`Otimização ${deleteItemId} excluída com sucesso!`, 'success');
+                
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+                modal.hide();
+                
+                deleteItemId = null;
+            }
+        }
+
+        function viewDetails(id) {
+            const item = currentData.find(o => o.id === id);
+            if (!item) {
+                showNotification('Otimização não encontrada', 'error');
+                return;
+            }
+            
+            document.getElementById('modalTitle').textContent = `Detalhes - ${id}`;
+            document.getElementById('editingId').value = '';
+            
+            fillForm(item);
+            
+            // Desabilitar todos os campos
+            const formElements = document.querySelectorAll('#otimizacaoForm input, #otimizacaoForm select, #otimizacaoForm textarea');
+            formElements.forEach(element => element.disabled = true);
+            
+            // Esconder botão salvar
+            const saveButton = document.querySelector('#otimizacaoModal .btn-primary');
+            saveButton.style.display = 'none';
+            
+            const modal = new bootstrap.Modal(document.getElementById('otimizacaoModal'));
+            modal.show();
+            
+            // Restaurar campos quando fechar
+            modal._element.addEventListener('hidden.bs.modal', () => {
+                formElements.forEach(element => element.disabled = false);
+                saveButton.style.display = '';
+            }, { once: true });
+        }
+
+        // Utility Functions
+        function getFormData() {
+            return {
+                id: document.getElementById('id').value,
+                status: document.getElementById('status').value,
+                pilar_funil: document.getElementById('pilar_funil').value,
+                tipo_teste: document.getElementById('tipo_teste').value,
+                produto_impactado: document.getElementById('produto_impactado').value,
+                titulo_acao: document.getElementById('titulo_acao').value,
+                descricao: document.getElementById('descricao').value,
+                kpi_principal: document.getElementById('kpi_principal').value,
+                meta_impacto_pct: parseFloat(document.getElementById('meta_impacto_pct').value) || null,
+                resultado_real_pct: parseFloat(document.getElementById('resultado_real_pct').value) || null,
+                data_inicio: document.getElementById('data_inicio').value || null,
+                data_fim: document.getElementById('data_fim').value || null,
+                atingiu: calculateAtingiu()
+            };
+        }
+
+        function calculateAtingiu() {
+            const meta = parseFloat(document.getElementById('meta_impacto_pct').value);
+            const real = parseFloat(document.getElementById('resultado_real_pct').value);
+            const status = document.getElementById('status').value;
+            
+            if (status === 'VALIDADO' && meta && real) {
+                return real >= meta;
+            }
+            return false;
+        }
+
+        function validateForm(data) {
+            const errors = [];
+            
+            if (!data.id) errors.push('ID é obrigatório');
+            if (!data.status) errors.push('Status é obrigatório');
+            if (!data.pilar_funil) errors.push('Pilar do Funil é obrigatório');
+            if (!data.tipo_teste) errors.push('Tipo de Teste é obrigatório');
+            if (!data.produto_impactado) errors.push('Produto Impactado é obrigatório');
+            if (!data.titulo_acao) errors.push('Título da Ação é obrigatório');
+            if (!data.kpi_principal) errors.push('KPI Principal é obrigatório');
+            
+            return errors;
+        }
+
+        function fillForm(data) {
+            document.getElementById('id').value = data.id || '';
+            document.getElementById('status').value = data.status || '';
+            document.getElementById('pilar_funil').value = data.pilar_funil || '';
+            document.getElementById('tipo_teste').value = data.tipo_teste || '';
+            document.getElementById('produto_impactado').value = data.produto_impactado || '';
+            document.getElementById('titulo_acao').value = data.titulo_acao || '';
+            document.getElementById('descricao').value = data.descricao || '';
+            document.getElementById('kpi_principal').value = data.kpi_principal || '';
+            document.getElementById('meta_impacto_pct').value = data.meta_impacto_pct || '';
+            document.getElementById('resultado_real_pct').value = data.resultado_real_pct || '';
+            document.getElementById('data_inicio').value = data.data_inicio || '';
+            document.getElementById('data_fim').value = data.data_fim || '';
+        }
+
+        function clearForm() {
+            document.getElementById('otimizacaoForm').reset();
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleDateString('pt-BR');
+        }
+
+        function formatPercentage(value) {
+            if (value === null || value === undefined || value === '') return '-';
+            return value.toFixed(2) + '%';
+        }
+
+        function truncate(str, length) {
+            if (!str) return '';
+            return str.length > length ? str.substring(0, length) + '...' : str;
+        }
+
+        function getAtingiuBadge(atingiu, status) {
+            if (status !== 'VALIDADO') {
+                return '<span class="badge bg-light text-dark border"><i class="bi bi-clock me-1"></i> Pendente</span>';
+            }
+            
+            return atingiu 
+                ? '<span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Atingiu</span>'
+                : '<span class="badge bg-danger"><i class="bi bi-x-circle-fill me-1"></i> Não Atingiu</span>';
+        }
+
+        function getComparisonIcon(real, meta) {
+            if (!real || !meta) return '';
+            
+            return real >= meta 
+                ? '<div class="mt-1"><i class="bi bi-trend-up text-success"></i> <small class="text-success">Acima da meta</small></div>'
+                : '<div class="mt-1"><i class="bi bi-trend-down text-danger"></i> <small class="text-danger">Abaixo da meta</small></div>';
+        }
+
+        function showNotification(message, type = 'info') {
+            const toast = document.getElementById('notificationToast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="bi ${type === 'success' ? 'bi-check-circle-fill text-success' : type === 'error' ? 'bi-exclamation-triangle-fill text-danger' : 'bi-info-circle-fill text-primary'} me-2"></i>
+                    ${message}
+                </div>
+            `;
+            
+            // Aplicar classes de cor
+            toast.className = `toast ${type === 'error' ? 'bg-danger text-white' : type === 'success' ? 'bg-success text-white' : 'bg-light'}`;
+            
+            const bsToast = new bootstrap.Toast(toast, {
+                autohide: true,
+                delay: type === 'error' ? 5000 : 3000
+            });
+            bsToast.show();
+        }
+
+        function refreshData() {
+            loadData();
+            showNotification('Dados atualizados!', 'success');
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(currentData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'growth-loops-data.json';
+            link.click();
+            showNotification('Dados exportados!', 'success');
+        }
+
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            currentData = data;
+                            saveData();
+                            loadData();
+                            showNotification('Dados importados com sucesso!', 'success');
+                        } catch (error) {
+                            showNotification('Erro ao importar dados: arquivo inválido', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+    </script>
+</body>
+</html>
